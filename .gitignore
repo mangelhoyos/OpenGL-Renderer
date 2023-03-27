@@ -259,3 +259,5 @@ $RECYCLE.BIN/
 OpenGLProject\OpenGLProject\x64
 OpenGLProject\OpenGLProject\Debug
 .vs/
+OpenGLProject/OpenGLProject/Debug/_IsIncrementalBuild
+OpenGLProject/OpenGLProject/Debug/OpenGLProject.exe.recipe
