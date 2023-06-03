@@ -1,15 +1,28 @@
-//Hecho por Miguel Ángel Hoyos Ramírez
+
+//Made by Miguel Ángel Hoyos Ramírez
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <cmath>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp> //Para la matriz de proyección
+#include <glm/gtc/type_ptr.hpp>
+
 // Dimensiones de la ventana de Windows
 const GLint WIDTH = 800, HEIGHT = 600;
 
-GLuint VAO, VBO, shader;
+GLuint VAO, VBO, shader, uniformModel;
+
+//Variables para el control de la animación
+bool direction = true;
+float triOffset = 0.0f;
+float triMaxoffset = 0.7f;
+float triIncrement = 0.008f;
 
 #pragma region Shader Temporal del Triangulo
 //Shader temporal para la prueba del triangulo
@@ -20,9 +33,11 @@ static const char* vShader = "								\n\
 															\n\
 layout (location = 0) in vec3 pos;							\n\
 															\n\
+uniform mat4 model;															\n\
+															\n\
 void main()													\n\
 {															\n\
-	gl_Position = vec4(pos.x * 0.4, pos.y * 0.4, pos.z * 0.4, 1.0);			\n\
+	gl_Position = model * vec4(pos.x * 0.4, pos.y * 0.4, pos.z * 0.4, 1.0);			\n\
 															\n\
 }";
 
@@ -132,6 +147,9 @@ void CompileShaders()
 			Log :: '%s'\n", eLog);
 		return;
 	}
+
+	//Move the triangle
+	uniformModel = glGetUniformLocation(shader, "model");
 }
 
 int main()
@@ -195,11 +213,32 @@ int main()
 		//Aquí podemos manejar el input del usuario
 		glfwPollEvents();
 
+		//Animación triangulo (cambio de dirección si llega al offset)
+		if (direction)
+		{
+			triOffset += triIncrement;
+		}
+		else
+		{
+			triOffset -= triIncrement;
+		}
+
+		if (abs(triOffset) >= triMaxoffset)
+		{
+			direction = !direction;
+		}
+
 		//Limpiar la ventana
 		glClearColor(.0f, .0f, .0f, .0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(shader);
+
+		glm::mat4 model(1.0f);
+		model = glm::translate(model, glm::vec3(triOffset, triOffset, 0.0f));
+
+		glUniform1f(uniformModel, triOffset);
+		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
