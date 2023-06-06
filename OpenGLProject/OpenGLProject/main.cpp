@@ -16,13 +16,23 @@
 // Dimensiones de la ventana de Windows
 const GLint WIDTH = 800, HEIGHT = 600;
 
+//Constantes
+const float toRadians = 3.14159265f / 180.0f;
+
 GLuint VAO, VBO, shader, uniformModel;
 
-//Variables para el control de la animación
+//Variables para el control de la animación (TEMP)
 bool direction = true;
 float triOffset = 0.0f;
 float triMaxoffset = 0.7f;
 float triIncrement = 0.008f;
+
+float currentAngle = 0.0f;
+
+bool sizeDirection = true;
+float currentSize = 0.4f;
+float maxSize = 0.8f;
+float minSize = 0.1f;
 
 #pragma region Shader Temporal del Triangulo
 //Shader temporal para la prueba del triangulo
@@ -37,7 +47,7 @@ uniform mat4 model;															\n\
 															\n\
 void main()													\n\
 {															\n\
-	gl_Position = model * vec4(pos.x * 0.4, pos.y * 0.4, pos.z * 0.4, 1.0);			\n\
+	gl_Position = model * vec4(pos.x, pos.y, pos.z, 1.0);			\n\
 															\n\
 }";
 
@@ -213,7 +223,9 @@ int main()
 		//Aquí podemos manejar el input del usuario
 		glfwPollEvents();
 
-		//Animación triangulo (cambio de dirección si llega al offset)
+		//Animación triangulo (cambio de dirección si llega al offset y rotación continua)
+		#pragma region Animación
+
 		if (direction)
 		{
 			triOffset += triIncrement;
@@ -228,6 +240,28 @@ int main()
 			direction = !direction;
 		}
 
+		currentAngle += 0.5f;
+		if (currentAngle >= 360)
+		{
+			currentAngle -= 360;
+		}
+
+		if (sizeDirection)
+		{
+			currentSize += 0.001f;
+		}
+		else
+		{
+			currentSize -= 0.001f;
+		}
+
+		if (currentSize >= maxSize || currentSize <= minSize)
+		{
+			sizeDirection = !sizeDirection;
+		}
+
+		#pragma endregion
+
 		//Limpiar la ventana
 		glClearColor(.0f, .0f, .0f, .0f);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -235,9 +269,11 @@ int main()
 		glUseProgram(shader);
 
 		glm::mat4 model(1.0f);
-		model = glm::translate(model, glm::vec3(triOffset, triOffset, 0.0f));
+		
+		model = glm::translate(model, glm::vec3(triOffset, triOffset, 0.0f));		
+		model = glm::rotate(model, currentAngle * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
+		model = glm::scale(model, glm::vec3(currentSize, currentSize, 1.0f));
 
-		glUniform1f(uniformModel, triOffset);
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 
 		glBindVertexArray(VAO);
